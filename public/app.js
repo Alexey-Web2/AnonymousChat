@@ -2,7 +2,7 @@
 // SOCKET.IO
 // ======================
 
-const socket = io("https://anonymouschat-production.up.railway.app");
+const socket = io();
 
 // ======================
 // ЭЛЕМЕНТЫ

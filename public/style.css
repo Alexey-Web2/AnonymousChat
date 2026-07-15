@@ -9,125 +9,152 @@
 
 :root {
     /* Цветовая палитра */
-    --bg: #060713;
-    --surface: rgba(255, 255, 255, 0.05);
-    --surface-hover: rgba(255, 255, 255, 0.09);
-    --border: rgba(255, 255, 255, 0.08);
-    --border-hover: rgba(255, 255, 255, 0.16);
+    --bg: #03040b;
+    --surface: rgba(255, 255, 255, 0.03);
+    --surface-hover: rgba(255, 255, 255, 0.07);
+    --border: rgba(255, 255, 255, 0.06);
+    --border-hover: rgba(255, 255, 255, 0.12);
     --text: #f8fafc;
-    --muted: #94a3b8;
+    --muted: #64748b;
     
     /* Акценты */
     --primary: #6d5dfc;
     --primary-hover: #5b4deb;
-    --primary-gradient: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 50%, #6d5dfc 100%);
-    --primary-glow: rgba(109, 93, 252, 0.4);
+    --primary-gradient: linear-gradient(135deg, #6d5dfc 0%, #a855f7 50%, #6d5dfc 100%);
+    --primary-glow: rgba(109, 93, 252, 0.35);
     
     /* Статусы */
-    --danger: #f43f5e;
+    --danger: #ef4444;
     --success: #10b981;
     --warning: #f59e0b;
-    --admin: #ff9500;
+    --admin: #f97316;
 
     /* Переменные анимаций */
-    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --ease-elastic: cubic-bezier(0.34, 1.6, 0.64, 1);
     --ease-out-quad: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* =======================
+   СТИЛЬНЫЙ СКРОЛЛБАР
+======================= */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary-glow);
 }
 
 body {
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
 }
 
 /* =======================
-   ДИНАМИЧЕСКИЙ ФОН
+   ДИНАМИЧЕСКИЙ КОСМИЧЕСКИЙ ФОН
 ======================= */
-
 .background {
     position: fixed;
     inset: 0;
     overflow: hidden;
     z-index: -1;
-    background: radial-gradient(circle at 50% 50%, #0d0e26 0%, var(--bg) 100%);
+    background: radial-gradient(circle at 50% 50%, #0a0b1e 0%, var(--bg) 100%);
 }
 
 .background::before,
 .background::after {
     content: "";
     position: absolute;
-    width: 600px;
-    height: 600px;
+    width: 700px;
+    height: 700px;
     border-radius: 50%;
-    filter: blur(140px);
-    opacity: 0.35;
+    filter: blur(150px);
+    opacity: 0.25;
     will-change: transform;
-    animation: cosmic-drift 20s ease-in-out infinite alternate;
+    animation: cosmic-drift 25s ease-in-out infinite alternate;
 }
 
 .background::before {
     background: var(--primary);
-    left: -10%;
-    top: -10%;
+    left: -15%;
+    top: -15%;
 }
 
 .background::after {
-    background: #7c3aed;
-    right: -10%;
-    bottom: -10%;
-    animation-delay: -5s;
+    background: #8b5cf6;
+    right: -15%;
+    bottom: -15%;
+    animation-delay: -7s;
 }
 
 @keyframes cosmic-drift {
     0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
-    50% { transform: translate3d(60px, 80px, 0) scale(1.15) rotate(90deg); }
-    100% { transform: translate3d(-40px, 40px, 0) scale(0.9) rotate(180deg); }
+    50% { transform: translate3d(80px, 100px, 0) scale(1.2) rotate(120deg); }
+    100% { transform: translate3d(-60px, 50px, 0) scale(0.85) rotate(240deg); }
 }
 
 /* =======================
    ОБЩИЕ ЭЛЕМЕНТЫ СТРУКТУРЫ
 ======================= */
-
 .hidden {
     display: none !important;
 }
 
-/* Плавная смена страниц приложения */
+/* Элегантный вход страниц с размытием */
 .page {
     width: 100%;
     height: 100vh;
-    animation: pageEnter 0.4s var(--ease-out-quad) forwards;
+    animation: pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes pageEnter {
-    from { opacity: 0; transform: scale(1.02); filter: blur(4px); }
-    to { opacity: 1; transform: scale(1); filter: blur(0); }
+    from { 
+        opacity: 0; 
+        transform: translateY(15px) scale(0.99); 
+        filter: blur(8px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+        filter: blur(0); 
+    }
 }
 
-/* Инпуты с "живым" фокусом */
+/* Инпуты с "живым" неоновым фокусом */
 input,
 textarea {
     width: 100%;
     border: 1px solid var(--border);
     outline: none;
-    border-radius: 14px;
-    padding: 14px 18px;
+    border-radius: 16px;
+    padding: 16px 20px;
     margin-top: 12px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.02);
     color: var(--text);
     font-size: 15px;
     transition: var(--transition);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 input:focus,
 textarea:focus {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(109, 93, 252, 0.6);
-    box-shadow: 0 0 0 4px rgba(109, 93, 252, 0.15), inset 0 1px 2px rgba(255,255,255,0.05);
-    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(109, 93, 252, 0.8);
+    box-shadow: 0 0 20px rgba(109, 93, 252, 0.2), inset 0 1px 2px rgba(255,255,255,0.05);
+    transform: translateY(-2px);
+    padding-left: 24px; /* Плавный сдвиг текста вправо при фокусе */
 }
 
 textarea {
@@ -135,7 +162,7 @@ textarea {
     min-height: 120px;
 }
 
-/* Кнопки с микро-откликом на клик */
+/* Кнопки с упругим микро-откликом */
 button {
     cursor: pointer;
     border: none;
@@ -144,23 +171,29 @@ button {
 }
 
 button:active {
-    transform: scale(0.96) !important;
+    transform: scale(0.94) !important;
 }
 
-/* Переливающийся градиент для главных кнопок */
+/* Анимированный переливающийся градиент (Fluid Gradient) */
 .main-btn, .send-button, .fab {
     background-size: 200% auto !important;
-    transition: var(--transition), background-position 0.4s ease !important;
+    animation: fluidGradient 6s linear infinite;
+    transition: var(--transition);
+}
+
+@keyframes fluidGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .main-btn:hover, .send-button:hover, .fab:hover {
-    background-position: right center !important;
+    filter: brightness(1.1);
 }
 
 /* =======================
    LOGIN PAGE
 ======================= */
-
 #loginPage {
     display: flex;
     justify-content: center;
@@ -171,35 +204,36 @@ button:active {
 .login-card {
     width: 100%;
     max-width: 400px;
-    padding: 40px 32px;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    padding: 44px 36px;
+    background: rgba(15, 16, 32, 0.6);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
     border: 1px solid var(--border);
-    border-radius: 24px;
-    box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.5);
-    animation: cardReveal 0.6s var(--ease-elastic) forwards;
+    border-radius: 28px;
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    animation: cardReveal 0.8s var(--ease-elastic) forwards;
 }
 
 @keyframes cardReveal {
-    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    from { opacity: 0; transform: translateY(40px) scale(0.93); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .logo-circle {
-    width: 80px;
-    height: 80px;
-    border-radius: 22px;
+    width: 84px;
+    height: 84px;
+    border-radius: 24px;
     margin: 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden; /* важно */
-    font-size: 32px;
+    overflow: hidden;
+    font-size: 34px;
     font-weight: 700;
     background: var(--primary-gradient);
-    box-shadow: 0 12px 30px -5px var(--primary-glow);
-    animation: logoPulse 4s ease-in-out infinite;
+    box-shadow: 0 16px 32px var(--primary-glow);
+    animation: logoPulse 5s ease-in-out infinite;
 }
 
 .logo-circle img {
@@ -210,16 +244,19 @@ button:active {
 }
 
 @keyframes logoPulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 12px 30px -5px var(--primary-glow); }
-    50% { transform: scale(1.04); box-shadow: 0 16px 35px var(--primary-glow); }
+    0%, 100% { transform: scale(1) rotate(0deg); box-shadow: 0 16px 32px var(--primary-glow); }
+    50% { transform: scale(1.06) rotate(3deg); box-shadow: 0 20px 40px rgba(109, 93, 252, 0.6); }
 }
 
 .login-card h1 {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     text-align: center;
     margin-top: 24px;
+    background: linear-gradient(180deg, #fff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
@@ -227,61 +264,60 @@ button:active {
     color: var(--muted);
     font-size: 14px;
     margin-top: 8px;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
 }
 
 .main-btn {
     width: 100%;
     margin-top: 20px;
     padding: 16px;
-    border-radius: 14px;
+    border-radius: 16px;
     color: #fff;
     font-size: 16px;
     font-weight: 600;
     background: var(--primary-gradient);
-    box-shadow: 0 4px 15px rgba(109, 93, 252, 0.2);
+    box-shadow: 0 8px 20px rgba(109, 93, 252, 0.3);
 }
 
 .main-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px var(--primary-glow);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px var(--primary-glow);
 }
 
 /* =======================
    TOPBAR
 ======================= */
-
 .topbar {
-    height: 72px;
+    height: 76px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
-    background: rgba(6, 7, 19, 0.4);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    padding: 0 28px;
+    background: rgba(3, 4, 11, 0.5);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid var(--border);
 }
 
 .logo-small {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     background: var(--primary-gradient);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
-    transition: transform 0.3s var(--ease-elastic);
+    transition: transform 0.4s var(--ease-elastic);
 }
 .logo-small:hover {
-    transform: rotate(10deg) scale(1.05);
+    transform: rotate(15deg) scale(1.1);
 }
 
 .profile-button {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -295,15 +331,14 @@ button:active {
 .profile-button:hover {
     background: var(--surface-hover);
     border-color: var(--border-hover);
-    transform: translateY(-1px);
+    transform: translateY(-2px) scale(1.05);
 }
 
 /* =======================
    MAIN CONTENT
 ======================= */
-
 .content {
-    padding: 24px;
+    padding: 28px;
 }
 
 .empty-state {
@@ -312,19 +347,19 @@ button:active {
 }
 
 .empty-icon {
-    font-size: 54px;
-    margin-bottom: 16px;
+    font-size: 58px;
+    margin-bottom: 18px;
     display: inline-block;
-    animation: floatIcon 3s ease-in-out infinite;
+    animation: floatIcon 4s ease-in-out infinite;
 }
 
 @keyframes floatIcon {
-    0%, 100% { transform: translateY(0); filter: drop-shadow(0 10px 15px rgba(109, 93, 252, 0.2)); }
-    50% { transform: translateY(-10px); filter: drop-shadow(0 20px 25px rgba(109, 93, 252, 0.4)); }
+    0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 8px 12px rgba(109, 93, 252, 0.2)); }
+    50% { transform: translateY(-12px) rotate(5deg); filter: drop-shadow(0 22px 28px rgba(109, 93, 252, 0.5)); }
 }
 
 .empty-state h3 {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 600;
     margin-bottom: 8px;
 }
@@ -337,64 +372,61 @@ button:active {
 /* =======================
    FLOATING ACTION BUTTONS (FAB)
 ======================= */
-
 .fab {
     position: fixed;
-    bottom: 32px;
+    bottom: 36px;
     left: 50%;
     transform: translateX(-50%);
-    width: 72px;
-    height: 72px;
+    width: 74px;
+    height: 74px;
     border-radius: 50%;
     color: #fff;
-    font-size: 32px;
+    font-size: 34px;
     background: var(--primary-gradient);
-    box-shadow: 0 12px 35px -5px var(--primary-glow);
+    box-shadow: 0 16px 40px -6px var(--primary-glow);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 90;
-    animation: radarPulse 2.5s infinite;
+    animation: radarPulse 3s infinite, fluidGradient 6s linear infinite;
 }
 
 .fab:hover {
-    transform: translateX(-50%) scale(1.05) translateY(-4px);
-    box-shadow: 0 16px 40px var(--primary-glow);
-    animation-play-state: paused; /* Отключаем пульсацию при ховере */
+    transform: translateX(-50%) scale(1.08) translateY(-6px);
+    box-shadow: 0 22px 48px var(--primary-glow);
+    animation-play-state: paused;
 }
 
 @keyframes radarPulse {
-    0% { box-shadow: 0 0 0 0 rgba(109, 93, 252, 0.5), 0 12px 35px -5px var(--primary-glow); }
-    70% { box-shadow: 0 0 0 20px rgba(109, 93, 252, 0), 0 12px 35px -5px var(--primary-glow); }
-    100% { box-shadow: 0 0 0 0 rgba(109, 93, 252, 0), 0 12px 35px -5px var(--primary-glow); }
+    0% { box-shadow: 0 0 0 0 rgba(109, 93, 252, 0.6), 0 16px 40px -6px var(--primary-glow); }
+    70% { box-shadow: 0 0 0 24px rgba(109, 93, 252, 0), 0 16px 40px -6px var(--primary-glow); }
+    100% { box-shadow: 0 0 0 0 rgba(109, 93, 252, 0), 0 16px 40px -6px var(--primary-glow); }
 }
 
-/* Кнопка доступа слева */
 #accessButton {
-    left: 32px;
+    left: 36px;
     right: auto;
     transform: none;
 }
 #accessButton:hover {
-    transform: scale(1.05) translateY(-4px);
+    transform: scale(1.08) translateY(-6px);
 }
 
 /* =======================
-   MODALS
+   MODALS (GLASSMORPHISM)
 ======================= */
-
 .modal {
     position: fixed;
     inset: 0;
-    background: rgba(3, 4, 9, 0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(2, 3, 6, 0.7);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 24px;
     z-index: 999;
-    animation: backdropFade 0.3s ease forwards;
+    animation: backdropFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes backdropFade {
@@ -405,32 +437,33 @@ button:active {
 .modal-window {
     width: 100%;
     max-width: 400px;
-    background: rgba(20, 22, 41, 0.75);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    background: rgba(15, 17, 33, 0.7);
+    backdrop-filter: blur(35px);
+    -webkit-backdrop-filter: blur(35px);
     border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 32px;
-    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
-    animation: modalReveal 0.4s var(--ease-elastic) forwards;
+    border-radius: 28px;
+    padding: 36px;
+    box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.8), 
+                inset 0 1px 0 rgba(255,255,255,0.05);
+    animation: modalReveal 0.5s var(--ease-elastic) forwards;
 }
 
 @keyframes modalReveal {
-    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    from { opacity: 0; transform: scale(0.88) translateY(30px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .modal-window h2 {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
     margin-bottom: 12px;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
 }
 
 .modal-window p {
     color: var(--muted);
     font-size: 15px;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 .action-btn,
@@ -438,9 +471,9 @@ button:active {
 .logout-btn,
 .danger-btn {
     width: 100%;
-    padding: 14px;
-    margin-top: 12px;
-    border-radius: 14px;
+    padding: 15px;
+    margin-top: 14px;
+    border-radius: 16px;
     color: #fff;
     font-size: 15px;
     font-weight: 600;
@@ -450,68 +483,92 @@ button:active {
     background: var(--surface);
     border: 1px solid var(--border);
 }
-.action-btn:hover { background: var(--surface-hover); transform: translateY(-1px); }
+.action-btn:hover { 
+    background: var(--surface-hover); 
+    border-color: var(--border-hover);
+    transform: translateY(-2px); 
+}
 
 .cancel-btn, .logout-btn {
     background: #1e293b;
 }
-.cancel-btn:hover, .logout-btn:hover { background: #334155; transform: translateY(-1px); }
+.cancel-btn:hover, .logout-btn:hover { 
+    background: #2d3748; 
+    transform: translateY(-2px); 
+}
 
 .danger-btn {
     background: var(--danger);
-    box-shadow: 0 4px 15px rgba(244, 63, 94, 0.2);
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.25);
 }
-.danger-btn:hover { box-shadow: 0 6px 20px rgba(244, 63, 94, 0.35); transform: translateY(-1px); }
+.danger-btn:hover { 
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.45); 
+    transform: translateY(-2px); 
+}
 
-/* Элегантный радар-лоадер поиска */
+/* Элегантный радар-лоадер поиска с двойной орбитой */
 .search-loader {
-    width: 64px;
-    height: 64px;
+    width: 68px;
+    height: 68px;
     border-radius: 50%;
     margin: 16px auto 24px;
     border: 3px solid var(--border);
     border-top: 3px solid var(--primary);
-    animation: spin 0.7s linear infinite;
+    border-bottom: 3px solid var(--primary);
+    animation: spin 1s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
     position: relative;
+}
+
+.search-loader::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-left: 3px solid #a855f7;
+    border-right: 3px solid #a855f7;
+    animation: spin-reverse 0.6s linear infinite;
 }
 
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+@keyframes spin-reverse {
+    to { transform: rotate(-360deg); }
+}
 
 /* =======================
    PROFILE
 ======================= */
-
 .avatar {
-    width: 96px;
-    height: 96px;
+    width: 100px;
+    height: 100px;
     margin: 0 auto;
-    border-radius: 28px;
+    border-radius: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 36px;
+    font-size: 38px;
     font-weight: 700;
     background: var(--primary-gradient);
-    box-shadow: 0 10px 25px var(--primary-glow);
-    transition: transform 0.4s var(--ease-elastic);
+    box-shadow: 0 14px 30px var(--primary-glow);
+    transition: transform 0.5s var(--ease-elastic);
 }
 .avatar:hover {
-    transform: scale(1.08) rotate(-3deg);
+    transform: scale(1.1) rotate(-4deg);
 }
 
 #profileUsername {
     text-align: center;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 600;
-    margin-top: 16px;
+    margin-top: 18px;
+    letter-spacing: -0.01em;
 }
 
 /* =======================
    CHAT PAGE
 ======================= */
-
 .chat-page {
     position: fixed;
     inset: 0;
@@ -522,66 +579,68 @@ button:active {
 }
 
 .chat-header {
-    height: 76px;
+    height: 80px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
-    background: rgba(6, 7, 19, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    padding: 0 28px;
+    background: rgba(3, 4, 11, 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid var(--border);
 }
 
 .chat-user {
     display: flex;
-    gap: 14px;
+    gap: 16px;
     align-items: center;
 }
 
 .chat-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
     display: flex;
     justify-content: center;
     align-items: center;
     background: var(--primary-gradient);
     font-weight: 600;
+    box-shadow: 0 6px 14px var(--primary-glow);
 }
 
 .chat-title {
     font-weight: 600;
-    font-size: 16px;
+    font-size: 17px;
 }
 
 .chat-status {
     color: var(--success);
     font-size: 13px;
     font-weight: 500;
-    margin-top: 1px;
+    margin-top: 2px;
     display: flex;
     align-items: center;
     gap: 6px;
 }
 .chat-status::before {
     content: "";
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     background: currentColor;
     border-radius: 50%;
     display: inline-block;
-    animation: statusPulse 1.8s infinite;
+    animation: statusPulse 1.8s ease-in-out infinite;
+    box-shadow: 0 0 8px var(--success);
 }
 
 @keyframes statusPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.8); }
 }
 
 .close-chat {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -591,53 +650,63 @@ button:active {
     align-items: center;
     justify-content: center;
 }
-.close-chat:hover { background: var(--surface-hover); transform: scale(1.05); }
+.close-chat:hover { 
+    background: var(--surface-hover); 
+    border-color: var(--border-hover);
+    transform: scale(1.08) rotate(90deg); 
+}
 
 .chat-messages {
     flex: 1;
     overflow-y: auto;
-    padding: 24px;
+    padding: 28px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     scroll-behavior: smooth;
 }
 
-/* Мягкое появление сообщений из угла */
+/* Упругое появление сообщений */
 .message {
     max-width: 70%;
-    padding: 12px 18px;
+    padding: 14px 20px;
     font-size: 15px;
-    line-height: 1.4;
+    line-height: 1.5;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 18px 18px 18px 4px;
+    border-radius: 20px 20px 20px 6px;
     align-self: flex-start;
     transform-origin: left bottom;
-    animation: bubbleAppear 0.35s var(--ease-elastic) forwards;
+    animation: bubbleAppear 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .my-message {
-    border-radius: 18px 18px 4px 18px;
+    border-radius: 20px 20px 6px 20px;
     align-self: flex-end;
     transform-origin: right bottom;
     background: var(--primary-gradient);
     border: none;
-    box-shadow: 0 4px 15px rgba(109, 93, 252, 0.15);
+    box-shadow: 0 6px 20px rgba(109, 93, 252, 0.2);
+    animation-name: bubbleAppearMy;
 }
 
 @keyframes bubbleAppear {
-    from { opacity: 0; transform: scale(0.85) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+    from { opacity: 0; transform: scale(0.8) translateY(15px) rotate(-3deg); }
+    to { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
+}
+
+@keyframes bubbleAppearMy {
+    from { opacity: 0; transform: scale(0.8) translateY(15px) rotate(3deg); }
+    to { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
 }
 
 .chat-input-container {
     display: flex;
-    gap: 12px;
-    padding: 16px 24px;
-    background: rgba(6, 7, 19, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    gap: 14px;
+    padding: 18px 28px;
+    background: rgba(3, 4, 11, 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid var(--border);
 }
 
@@ -646,56 +715,55 @@ button:active {
 }
 
 .send-button {
-    width: 50px;
-    height: 50px;
+    width: 52px;
+    height: 52px;
     flex-shrink: 0;
-    border-radius: 14px;
+    border-radius: 16px;
     background: var(--primary-gradient);
     color: #fff;
     font-size: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(109, 93, 252, 0.2);
+    box-shadow: 0 6px 16px rgba(109, 93, 252, 0.25);
 }
 .send-button:hover {
-    box-shadow: 0 6px 18px var(--primary-glow);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 22px var(--primary-glow);
+    transform: translateY(-3px) scale(1.05);
 }
 
 /* =======================
    SUPPORT & ADMIN
 ======================= */
-
 .support-fab {
     position: fixed;
-    right: 32px;
-    bottom: 32px;
-    width: 60px;
-    height: 60px;
+    right: 36px;
+    bottom: 36px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
-    font-size: 24px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    background: rgba(255, 255, 255, 0.07);
+    font-size: 26px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border);
     color: var(--text);
-    box-shadow: 0 10px 25px rgba(0,0,0,.3);
+    box-shadow: 0 12px 30px rgba(0,0,0,.4);
     z-index: 99;
 }
 .support-fab:hover {
-    transform: scale(1.05) translateY(-4px);
+    transform: scale(1.08) translateY(-6px);
     background: var(--surface-hover);
     border-color: var(--border-hover);
 }
 
 .support-badge {
     position: absolute;
-    top: 2px;
-    right: 2px;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
+    top: 0px;
+    right: 0px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
     border-radius: 10px;
     background: var(--danger);
     display: flex;
@@ -704,43 +772,43 @@ button:active {
     color: #fff;
     font-size: 10px;
     font-weight: 700;
-    animation: badgePulse 1.5s infinite;
+    animation: badgePulse 2s cubic-bezier(0.25, 0, 0, 1) infinite;
 }
 
 @keyframes badgePulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.6); }
-    50% { transform: scale(1.12); box-shadow: 0 0 0 8px rgba(244, 63, 94, 0); }
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    50% { transform: scale(1.15); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
 }
 
 .support-list {
-    padding: 24px;
+    padding: 28px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
 }
 
 .support-user {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 18px;
+    border-radius: 20px;
+    padding: 20px;
     transition: var(--transition);
 }
 
 .support-user:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px) scale(1.01);
     background: var(--surface-hover);
     border-color: var(--border-hover);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.4);
 }
 
 /* Плавный запуск окон саппорта */
 #supportPage, #supportListPage, #adminSupportPage {
-    animation: supportOpen 0.4s var(--ease-elastic) forwards;
+    animation: supportOpen 0.5s var(--ease-elastic) forwards;
 }
 
 @keyframes supportOpen {
-    from { opacity: 0; transform: scale(0.96) translateY(10px); }
+    from { opacity: 0; transform: scale(0.95) translateY(15px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
@@ -751,116 +819,121 @@ button:active {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle, #1a0b0b 0%, var(--bg) 100%);
+    background: radial-gradient(circle, #270d0d 0%, var(--bg) 100%);
 }
 
 .banned-card {
     width: 90%;
     max-width: 400px;
-    background: rgba(15, 15, 25, 0.7);
-    border: 1px solid rgba(244, 63, 94, 0.25);
-    border-radius: 24px;
-    padding: 40px 32px;
+    background: rgba(18, 11, 11, 0.7);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 28px;
+    padding: 44px 36px;
     text-align: center;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    animation: shakeError 0.5s calc(var(--ease-out-quad)) middle;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.6),
+                0 0 40px rgba(239, 68, 68, 0.1);
+    animation: shakeError 0.6s cubic-bezier(.36,.07,.19,.97) both;
 }
 
 @keyframes shakeError {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-6px); }
-    40%, 80% { transform: translateX(6px); }
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 
 .banned-card h1 {
     color: var(--danger);
-    font-size: 28px;
+    font-size: 30px;
     font-weight: 700;
     margin-bottom: 16px;
+    text-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
 }
 
 .admin-fab {
     position: fixed;
-    right: 32px;
-    bottom: 110px;
-    width: 54px;
-    height: 54px;
+    right: 36px;
+    bottom: 114px;
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
     background: var(--admin);
     color: #fff;
-    font-size: 22px;
-    box-shadow: 0 8px 20px rgba(255, 149, 0, 0.3);
+    font-size: 24px;
+    box-shadow: 0 10px 24px rgba(249, 115, 22, 0.3);
     z-index: 98;
 }
 .admin-fab:hover {
-    transform: scale(1.05) translateY(-4px);
-    box-shadow: 0 12px 25px rgba(255, 149, 0, 0.45);
+    transform: scale(1.08) translateY(-6px);
+    box-shadow: 0 16px 32px rgba(249, 115, 22, 0.5);
 }
 
 .admin-user {
     background: var(--surface);
     border: 1px solid var(--border);
-    padding: 16px 20px;
-    border-radius: 16px;
-    margin-bottom: 12px;
+    padding: 18px 22px;
+    border-radius: 20px;
+    margin-bottom: 14px;
     transition: var(--transition);
 }
 .admin-user:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     background: var(--surface-hover);
     border-color: var(--border-hover);
 }
 
 #codeInput {
     width: 100%;
-    margin-top: 16px;
+    margin-top: 18px;
     text-align: center;
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
-    letter-spacing: 6px;
-    background: rgba(255, 255, 255, 0.02);
+    letter-spacing: 8px;
+    background: rgba(255, 255, 255, 0.01);
     border: 1px dashed var(--border);
     transition: var(--transition);
 }
 #codeInput:focus {
     border-style: solid;
-    letter-spacing: 8px; /* Небольшой интерактивный эффект расширения букв */
+    letter-spacing: 12px;
+    border-color: var(--primary);
+    background: rgba(109, 93, 252, 0.03);
 }
 
 /* ======================
    УПРАВЛЕНИЕ ДОСТУПОМ
 ====================== */
-
 .access-card {
-    background: #111827;
+    background: #090d16;
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: 20px;
+    padding: 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     transition: var(--transition);
 }
 .access-card:hover {
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.18);
+    transform: scale(1.01);
 }
 
 .access-enabled {
     background: var(--success) !important;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.25);
 }
 .access-enabled:hover {
-    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.45);
 }
 
 .access-disabled {
     background: var(--danger) !important;
-    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2);
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.25);
 }
 .access-disabled:hover {
-    box-shadow: 0 6px 16px rgba(244, 63, 94, 0.4);
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.45);
 }
 
 #codePage {
@@ -873,24 +946,29 @@ button:active {
 /* =======================
    TOAST NOTIFICATIONS
 ======================= */
-
 .toast {
     position: fixed;
-    bottom: 40px;
+    bottom: 44px;
     left: 50%;
     transform: translateX(-50%);
-    padding: 14px 24px;
-    border-radius: 12px;
+    padding: 16px 28px;
+    border-radius: 16px;
     background: var(--danger);
     color: #fff;
     font-size: 14px;
     font-weight: 500;
-    box-shadow: 0 10px 30px rgba(244, 63, 94, 0.3);
+    box-shadow: 0 14px 35px rgba(239, 68, 68, 0.4);
     z-index: 10000;
-    animation: toastReveal 0.4s var(--ease-elastic) forwards;
+    animation: toastReveal 0.5s var(--ease-elastic) forwards;
 }
 
 @keyframes toastReveal {
-    from { opacity: 0; transform: translateX(-50%) translateY(24px) scale(0.95); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    from { 
+        opacity: 0; 
+        transform: translateX(-50%) translateY(30px) scale(0.9); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateX(-50%) translateY(0) scale(1); 
+    }
 }
