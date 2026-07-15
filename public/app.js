@@ -8,6 +8,11 @@ const socket = io();
 // ЭЛЕМЕНТЫ
 // ======================
 
+const mailTitle = document.getElementById("mailTitle");
+const mailMessage = document.getElementById("mailMessage");
+const mailType = document.getElementById("mailType");
+const mailUsername = document.getElementById("mailUsername");
+
 const loginPage = document.getElementById("loginPage");
 const homePage = document.getElementById("homePage");
 const chatPage = document.getElementById("chatPage");
@@ -31,6 +36,16 @@ const chatMessages = document.getElementById("chatMessages");
 
 const messagesContainer = document.getElementById("messagesContainer");
 const toast = document.getElementById("errorToast");
+
+const mailModal =
+document.getElementById(
+"mailModal"
+);
+
+const mailList =
+document.getElementById(
+"mailList"
+);
 
 const adminButton =
     document.getElementById(
@@ -144,6 +159,181 @@ const sendCodeBtn =
     document.getElementById(
         "sendCodeBtn"
     );
+
+
+function openMail(){
+
+mailModal.classList.remove(
+"hidden"
+);
+
+socket.emit(
+"getMail"
+);
+
+}
+
+function closeMail(){
+
+mailModal.classList.add(
+"hidden"
+);
+
+}
+
+socket.on(
+    "mailList",
+    (mails) => {
+
+        mailList.innerHTML = "";
+
+        if (mails.length === 0) {
+
+            mailList.innerHTML = `
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">
+                        📭
+                    </div>
+
+                    <h3>
+                        Пока нет писем
+                    </h3>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+        mails.forEach(mail => {
+
+            const div =
+                document.createElement("div");
+
+            div.className =
+                "mail-card";
+
+            div.innerHTML = `
+
+                <div class="mail-title">
+
+                    ${mail.title}
+
+                </div>
+
+                <div class="mail-text">
+
+                    ${mail.message}
+
+                </div>
+
+            `;
+
+            mailList.appendChild(div);
+
+        });
+
+    }
+);
+const mailAdminModal =
+document.getElementById(
+"mailAdminModal"
+);
+
+const adminMailList =
+document.getElementById(
+"adminMailList"
+);
+function openMailAdmin(){
+
+mailAdminModal.classList.remove(
+"hidden"
+);
+
+socket.emit(
+"getAdminMail"
+);
+
+}
+
+function closeMailAdmin(){
+
+mailAdminModal.classList.add(
+"hidden"
+);
+}
+function sendMailAdmin(){
+
+socket.emit(
+"sendMail",
+{
+
+title:
+mailTitle.value,
+
+message:
+mailMessage.value,
+
+type:
+mailType.value,
+
+username:
+mailUsername.value
+
+}
+
+);
+
+}
+socket.on(
+    "adminMailList",
+    (mails) => {
+
+        adminMailList.innerHTML = "";
+
+        mails.forEach(mail => {
+
+            const div = document.createElement("div");
+
+            div.className = "admin-mail";
+
+            div.innerHTML = `
+                <div class="admin-mail-title">
+                    ${mail.title}
+                </div>
+                <div>
+                    ${mail.message}
+                </div>
+                <div class="admin-mail-type">
+                    ${
+                        mail.send_type === "all"
+                        ? "Получатель: Все пользователи"
+                        : "Получатель: " + mail.target_username
+                    }
+                </div>
+                <button class="danger-btn" onclick="deleteMail(${mail.id})">
+                    Удалить
+                </button>
+            `;
+
+            adminMailList.appendChild(div);
+
+        });
+
+    }
+);
+function deleteMail(id){
+
+socket.emit(
+"deleteMail",
+id
+);
+
+}
 
 // ======================
 // ДАННЫЕ
@@ -333,16 +523,13 @@ function openChat() {
 // ======================
 
 function sendMessage() {
-
-    const text = chatInput.value.trim();
-
-    if (!text) return;
-
-    addMyMessage(text);
-
-    socket.emit("chatMessage", text);
-
-    chatInput.value = "";
+    const text = messageInput.value.trim();
+    console.log("1. Попытка отправки. Текст из поля:", text); // Видно ли это в консоли?
+    
+    if (!text) return; // Если text пустой, код остановится здесь
+    
+    socket.emit("send_message", { message: text });
+    console.log("2. Событие отправлено в сокет");
 }
 
 // пришло сообщение

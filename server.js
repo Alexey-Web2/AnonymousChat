@@ -12,7 +12,7 @@ const TelegramBot = require("node-telegram-bot-api");
 // ======================
 const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY // <--- изменили название переменной тут
+    process.env.SUPABASE_SERVICE_KEY
 );
 
 const app = express();
@@ -46,32 +46,171 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 // ТЕЛЕГРАМ БОТ
 // ======================
 bot.on("message", async (msg) => {
-    const username = msg.from.username;
-    if (!username) return;
+    try {
+        const username = msg.from?.username;
+        if (!username) return;
 
-    const appUsername = "@" + username;
+        const appUsername = "@" + username;
 
-    // Supabase Update
-    await supabase
-        .from('users')
-        .update({ telegramChatId: msg.chat.id })
-        .eq('username', appUsername);
+        // Supabase Update
+        await supabase
+            .from('users')
+            .update({ telegramChatId: msg.chat.id })
+            .eq('username', appUsername);
+    } catch (err) {
+        console.error("Telegram Bot Error:", err);
+    }
 });
 
 // ======================
 // SOCKET
 // ======================
 io.on("connection", (socket) => {
-
     console.log("Connected:", socket.id);
     socket.isAdmin = false;
+
+    // ======================
+    // ПОЛУЧЕНИЕ ПОЧТЫ
+    // ======================
+    socket.on("getMail", async () => {
+        if (!socket.username) return;
+
+        try {
+            // письма всем
+            const { data: globalMail } = await supabase
+                .from("mail_messages")
+                .select("*")
+                .eq("deleted", false)
+                .eq("send_type", "all");
+
+            // личные письма
+            const { data: personalMail } = await supabase
+                .from("mail_messages")
+                .select("*")
+                .eq("deleted", false)
+                .eq("send_type", "user")
+                .eq("target_username", socket.username);
+
+            const mails = [
+                ...(globalMail || []),
+                ...(personalMail || [])
+            ];
+
+            mails.sort(
+                (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            );
+
+            socket.emit("mailList", mails);
+        } catch (err) {
+            console.error("Get Mail Error:", err);
+        }
+    });
+
+    // ======================
+    // ОТПРАВКА И УПРАВЛЕНИЕ ПОЧТОЙ
+    // ======================
+    socket.on("sendMail", async (data) => {
+        if (!socket.isAdmin) return;
+        
+        try {
+            let username = null;
+
+            if (data.type === "all") {
+                await supabase
+                    .from("mail_messages")
+                    .insert({
+                        title: data.title,
+                        text: data.text,
+                        send_type: "all",
+                        deleted: false
+                    });
+            } else if (data.type === "user") {
+                username = data.username;
+                await supabase
+                    .from("mail_messages")
+                    .insert({
+                        title: data.title,
+                        text: data.text,
+                        send_type: "user",
+                        target_username: username,
+                        deleted: false
+                    });
+            } else if (data.type === "random") {
+                const { data: users, error } = await supabase
+                    .from("users")
+                    .select("username")
+                    .neq("username", ADMIN_USERNAME);
+
+                if (error) {
+                    console.log(error);
+                    return;
+                }
+
+                if (!users || users.length === 0) {
+                    socket.emit("mailError", "Нет пользователей");
+                    return;
+                }
+
+                const randomIndex = Math.floor(Math.random() * users.length);
+                username = users[randomIndex].username;
+
+                await supabase
+                    .from("mail_messages")
+                    .insert({
+                        title: data.title,
+                        text: data.text,
+                        send_type: "user",
+                        target_username: username,
+                        deleted: false
+                    });
+            }
+            socket.emit("mailSent");
+        } catch (err) {
+            console.error("Send Mail Error:", err);
+        }
+    });
+
+    socket.on("getAdminMail", async () => {
+        if (!socket.isAdmin) return;
+        
+        try {
+            const { data } = await supabase
+                .from("mail_messages")
+                .select("*")
+                .eq("deleted", false)
+                .order("created_at", { ascending: false });
+
+            socket.emit("adminMailList", data);
+        } catch (err) {
+            console.error("Get Admin Mail Error:", err);
+        }
+    });
+
+    socket.on("deleteMail", async (id) => {
+        if (!socket.isAdmin) return;
+        
+        try {
+            await supabase
+                .from("mail_messages")
+                .update({ deleted: true })
+                .eq("id", id);
+
+            const { data } = await supabase
+                .from("mail_messages")
+                .select("*")
+                .eq("deleted", false);
+
+            socket.emit("adminMailList", data);
+        } catch (err) {
+            console.error("Delete Mail Error:", err);
+        }
+    });
 
     // ======================
     // LOGIN
     // ======================
     socket.on("login", async (username) => {
         try {
-            // Ищем пользователя (maybeSingle возвращает null, если не найдено)
             let { data: user, error: findError } = await supabase
                 .from('users')
                 .select('*')
@@ -154,12 +293,7 @@ io.on("connection", (socket) => {
 
             if (!user) return;
 
-            if (user.loginCode !== code) {
-                socket.emit("wrongCode");
-                return;
-            }
-
-            if (Date.now() > user.codeExpires) {
+            if (user.loginCode !== code || Date.now() > user.codeExpires) {
                 socket.emit("wrongCode");
                 return;
             }
@@ -188,49 +322,54 @@ io.on("connection", (socket) => {
     // ПОИСК СОБЕСЕДНИКА
     // ======================
     socket.on("findPartner", async (roomSize) => {
-        const { data: settings } = await supabase
-            .from('system_settings')
-            .select('*')
-            .eq('id', 1)
-            .single();
+        try {
+            const { data: settings } = await supabase
+                .from('system_settings')
+                .select('*')
+                .eq('id', 1)
+                .single();
 
-        if (settings && !settings.chatsEnabled) {
-            socket.emit("chatsDisabled");
-            return;
-        }
+            if (settings && !settings.chatsEnabled) {
+                socket.emit("chatsDisabled");
+                return;
+            }
 
-        if (waitingUsers.find(u => u.id === socket.id)) return;
+            // ИСПРАВЛЕНО: проверяем u.socket.id, а не u.id
+            if (waitingUsers.find(u => u.socket.id === socket.id)) return;
 
-        waitingUsers.push({ socket, roomSize });
+            waitingUsers.push({ socket, roomSize });
 
-        const group = waitingUsers.filter(u => u.roomSize === roomSize);
+            const group = waitingUsers.filter(u => u.roomSize === roomSize);
 
-        group.forEach(user => {
-            user.socket.emit("searchCount", {
-                found: group.length,
-                total: roomSize
+            group.forEach(user => {
+                user.socket.emit("searchCount", {
+                    found: group.length,
+                    total: roomSize
+                });
             });
-        });
 
-        if (group.length < roomSize) return;
+            if (group.length < roomSize) return;
 
-        const roomUsers = waitingUsers
-            .filter(u => u.roomSize === roomSize)
-            .slice(0, roomSize);
+            const roomUsers = waitingUsers
+                .filter(u => u.roomSize === roomSize)
+                .slice(0, roomSize);
 
-        waitingUsers = waitingUsers.filter(u => !roomUsers.includes(u));
+            waitingUsers = waitingUsers.filter(u => !roomUsers.includes(u));
 
-        const room = "room_" + Date.now();
-        activeRooms[room] = { users: [] };
+            const room = "room_" + Date.now();
+            activeRooms[room] = { users: [] };
 
-        roomUsers.forEach((user, index) => {
-            user.socket.join(room);
-            user.socket.room = room;
-            user.socket.participantIndex = index + 1;
-            activeRooms[room].users.push(user.socket.id);
-        });
+            roomUsers.forEach((user, index) => {
+                user.socket.join(room);
+                user.socket.room = room;
+                user.socket.participantIndex = index + 1;
+                activeRooms[room].users.push(user.socket.id);
+            });
 
-        io.to(room).emit("chatStarted", { roomSize });
+            io.to(room).emit("chatStarted", { roomSize });
+        } catch (err) {
+            console.error("Find Partner Error:", err);
+        }
     });
 
     // ======================
@@ -258,18 +397,18 @@ io.on("connection", (socket) => {
     // ЛИЧНЫЕ СООБЩЕНИЯ
     // ======================
     socket.on("sendPrivateMessage", async (data) => {
-        const { data: settings } = await supabase
-            .from('system_settings')
-            .select('*')
-            .eq('id', 1)
-            .single();
-
-        if (settings && !settings.messagesEnabled) {
-            socket.emit("messagesDisabled");
-            return;
-        }
-
         try {
+            const { data: settings } = await supabase
+                .from('system_settings')
+                .select('*')
+                .eq('id', 1)
+                .single();
+
+            if (settings && !settings.messagesEnabled) {
+                socket.emit("messagesDisabled");
+                return;
+            }
+
             const { data: target } = await supabase
                 .from('users')
                 .select('*')
@@ -336,18 +475,18 @@ io.on("connection", (socket) => {
     });
 
     socket.on("supportMessage", async (text) => {
-        const { data: settings } = await supabase
-            .from('system_settings')
-            .select('*')
-            .eq('id', 1)
-            .single();
-
-        if (settings && !settings.supportEnabled) {
-            socket.emit("supportDisabled");
-            return;
-        }
-
         try {
+            const { data: settings } = await supabase
+                .from('system_settings')
+                .select('*')
+                .eq('id', 1)
+                .single();
+
+            if (settings && !settings.supportEnabled) {
+                socket.emit("supportDisabled");
+                return;
+            }
+
             let { data: conversation } = await supabase
                 .from('support_conversations')
                 .select('*')
@@ -388,7 +527,6 @@ io.on("connection", (socket) => {
                     text
                 });
             }
-
         } catch (err) {
             console.error("Support Msg Error:", err);
         }
@@ -398,9 +536,8 @@ io.on("connection", (socket) => {
     // ПАНЕЛЬ АДМИНА
     // ======================
     socket.on("getSupportList", async () => {
+        if (!socket.isAdmin) return;
         try {
-            if (!socket.isAdmin) return;
-
             const { data: conversations } = await supabase
                 .from('support_conversations')
                 .select('*')
@@ -414,9 +551,8 @@ io.on("connection", (socket) => {
     });
 
     socket.on("openSupportConversation", async (user) => {
+        if (!socket.isAdmin) return;
         try {
-            if (!socket.isAdmin) return;
-
             const { data: conversation } = await supabase
                 .from('support_conversations')
                 .select('*')
@@ -446,9 +582,8 @@ io.on("connection", (socket) => {
     });
 
     socket.on("adminSupportMessage", async (data) => {
+        if (!socket.isAdmin) return;
         try {
-            if (!socket.isAdmin) return;
-
             const { data: conversation } = await supabase
                 .from('support_conversations')
                 .select('*')
@@ -484,16 +619,14 @@ io.on("connection", (socket) => {
             }
 
             socket.emit("adminMessageSent", { text: data.text });
-
         } catch (err) {
             console.error("Admin Support Msg Error:", err);
         }
     });
 
     socket.on("endSupportConversation", async (user) => {
+        if (!socket.isAdmin) return;
         try {
-            if (!socket.isAdmin) return;
-
             const { data: conversation } = await supabase
                 .from('support_conversations')
                 .select('*')
@@ -502,8 +635,6 @@ io.on("connection", (socket) => {
 
             if (!conversation) return;
 
-            // Каскадное удаление (ON DELETE CASCADE) в Supabase удалит сообщения автоматически, 
-            // но для надежности можно удалить явно или просто удалить диалог:
             await supabase
                 .from('support_conversations')
                 .delete()
@@ -520,16 +651,14 @@ io.on("connection", (socket) => {
             }
 
             socket.emit("supportEndedAdmin", user);
-
         } catch (err) {
             console.error("End Support Error:", err);
         }
     });
 
     socket.on("getAllUsers", async () => {
+        if (!socket.isAdmin) return;
         try {
-            if (!socket.isAdmin) return;
-
             const { data: users } = await supabase
                 .from('users')
                 .select('*')
@@ -542,9 +671,8 @@ io.on("connection", (socket) => {
     });
 
     socket.on("toggleBanUser", async (username) => {
+        if (!socket.isAdmin) return;
         try {
-            if (!socket.isAdmin) return;
-
             const { data: user } = await supabase
                 .from('users')
                 .select('*')
@@ -570,16 +698,14 @@ io.on("connection", (socket) => {
                 .order('username', { ascending: true });
 
             socket.emit("allUsers", users || []);
-
         } catch (err) {
             console.error("Toggle Ban Error:", err);
         }
     });
 
     socket.on("deleteUser", async (username) => {
+        if (!socket.isAdmin) return;
         try {
-            if (!socket.isAdmin) return;
-
             const { data: user } = await supabase
                 .from('users')
                 .select('*')
@@ -588,13 +714,12 @@ io.on("connection", (socket) => {
 
             if (!user) return;
 
-            // Удаляем сообщения
+            // ИСПРАВЛЕНО: корректное использование .or() в Supabase через шаблонные строки
             await supabase
                 .from('messages')
                 .delete()
                 .or(`from.eq.${username},to.eq.${username}`);
 
-            // Удаляем поддержку (сообщения удалятся каскадом)
             await supabase
                 .from('support_conversations')
                 .delete()
@@ -615,16 +740,14 @@ io.on("connection", (socket) => {
                 .order('username', { ascending: true });
 
             socket.emit("allUsers", users || []);
-
         } catch (err) {
             console.error("Delete User Error:", err);
         }
     });
 
     socket.on("sendWarning", async (data) => {
+        if (!socket.isAdmin) return;
         try {
-            if (!socket.isAdmin) return;
-
             await supabase
                 .from('messages')
                 .insert([{
@@ -646,82 +769,100 @@ io.on("connection", (socket) => {
                     warning: true
                 });
             }
-
         } catch (err) {
             console.error("Send Warning Error:", err);
         }
     });
 
+    // ======================
+    // НАСТРОЙКИ ДОСТУПА
+    // ======================
     socket.on("getAccessSettings", async () => {
         if (!socket.isAdmin) return;
+        try {
+            const { data: settings } = await supabase
+                .from('system_settings')
+                .select('*')
+                .eq('id', 1)
+                .single();
 
-        const { data: settings } = await supabase
-            .from('system_settings')
-            .select('*')
-            .eq('id', 1)
-            .single();
-
-        socket.emit("accessSettings", settings);
+            socket.emit("accessSettings", settings);
+        } catch (err) {
+            console.error("Settings Error:", err);
+        }
     });
 
     socket.on("toggleSupport", async () => {
         if (!socket.isAdmin) return;
-        
-        const { data: settings } = await supabase.from('system_settings').select('*').eq('id', 1).single();
-        const { data: updated } = await supabase.from('system_settings')
-            .update({ supportEnabled: !settings.supportEnabled })
-            .eq('id', 1).select().single();
+        try {
+            const { data: settings } = await supabase.from('system_settings').select('*').eq('id', 1).single();
+            const { data: updated } = await supabase.from('system_settings')
+                .update({ supportEnabled: !settings.supportEnabled })
+                .eq('id', 1).select().single();
 
-        socket.emit("accessSettings", updated);
+            socket.emit("accessSettings", updated);
+        } catch (err) {
+            console.error("Settings Error:", err);
+        }
     });
 
     socket.on("toggleChats", async () => {
         if (!socket.isAdmin) return;
+        try {
+            const { data: settings } = await supabase.from('system_settings').select('*').eq('id', 1).single();
+            const { data: updated } = await supabase.from('system_settings')
+                .update({ chatsEnabled: !settings.chatsEnabled })
+                .eq('id', 1).select().single();
 
-        const { data: settings } = await supabase.from('system_settings').select('*').eq('id', 1).single();
-        const { data: updated } = await supabase.from('system_settings')
-            .update({ chatsEnabled: !settings.chatsEnabled })
-            .eq('id', 1).select().single();
-
-        socket.emit("accessSettings", updated);
+            socket.emit("accessSettings", updated);
+        } catch (err) {
+            console.error("Settings Error:", err);
+        }
     });
 
     socket.on("toggleMessages", async () => {
         if (!socket.isAdmin) return;
+        try {
+            const { data: settings } = await supabase.from('system_settings').select('*').eq('id', 1).single();
+            const { data: updated } = await supabase.from('system_settings')
+                .update({ messagesEnabled: !settings.messagesEnabled })
+                .eq('id', 1).select().single();
 
-        const { data: settings } = await supabase.from('system_settings').select('*').eq('id', 1).single();
-        const { data: updated } = await supabase.from('system_settings')
-            .update({ messagesEnabled: !settings.messagesEnabled })
-            .eq('id', 1).select().single();
-
-        socket.emit("accessSettings", updated);
+            socket.emit("accessSettings", updated);
+        } catch (err) {
+            console.error("Settings Error:", err);
+        }
     });
 
     socket.on("verifyAdminPassword", async (password) => {
         if (socket.username !== ADMIN_USERNAME) return;
+        
+        try {
+            if (password !== ADMIN_PASSWORD) {
+                socket.emit("wrongAdminPassword");
+                return;
+            }
 
-        if (password !== ADMIN_PASSWORD) {
-            socket.emit("wrongAdminPassword");
-            return;
-        }
+            socket.isAdmin = true;
 
-        socket.isAdmin = true;
-
-        const { data: user } = await supabase
-            .from('users')
-            .select('*')
-            .eq('username', ADMIN_USERNAME)
-            .maybeSingle();
-
-        if (user) {
-            await supabase
+            const { data: user } = await supabase
                 .from('users')
-                .update({ online: true, socketId: socket.id })
-                .eq('id', user.id);
-        }
+                .select('*')
+                .eq('username', ADMIN_USERNAME)
+                .maybeSingle();
 
-        socket.emit("adminLogged");
-        socket.emit("loginSuccess");
+            if (user) {
+                await supabase
+                    .from('users')
+                    .update({ online: true, socketId: socket.id })
+                    .eq('id', user.id);
+            }
+
+            socket.emit("adminLogged");
+            socket.emit("loginSuccess");
+        } catch (err) {
+            console.error("Admin Login Error:", err);
+        }
     });
 
     // ======================
@@ -729,22 +870,26 @@ io.on("connection", (socket) => {
     // ======================
     socket.on("disconnect", async () => {
         console.log("Disconnected:", socket.id);
+        
+        try {
+            if (socket.username) {
+                await supabase
+                    .from('users')
+                    .update({ online: false })
+                    .eq('username', socket.username);
+            }
 
-        if (socket.username) {
-            await supabase
-                .from('users')
-                .update({ online: false })
-                .eq('username', socket.username);
-        }
+            // ИСПРАВЛЕНО: проверяем u.socket.id, а не u.id
+            waitingUsers = waitingUsers.filter(u => u.socket.id !== socket.id);
 
-        waitingUsers = waitingUsers.filter(u => u.id !== socket.id);
-
-        if (socket.room) {
-            io.to(socket.room).emit("chatClosed");
-            delete activeRooms[socket.room];
+            if (socket.room) {
+                io.to(socket.room).emit("chatClosed");
+                delete activeRooms[socket.room];
+            }
+        } catch (err) {
+            console.error("Disconnect Error:", err);
         }
     });
-
 });
 
 // ======================

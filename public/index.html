@@ -46,15 +46,27 @@ HOME
 
     <header class="topbar">
 
-        <div class="logo-small">AC</div>
+    <div class="logo-small">AC</div>
 
-        <h2>Anonymous Chat</h2>
+    <h2>Anonymous Chat</h2>
 
-        <button class="profile-button" onclick="openProfile()">
+    <div class="topbar-buttons">
+
+        <button
+            class="mail-button"
+            onclick="openMail()">
+            📬
+        </button>
+
+        <button
+            class="profile-button"
+            onclick="openProfile()">
             ☰
         </button>
 
-    </header>
+    </div>
+
+</header>
 
     <div class="content">
 
@@ -325,6 +337,17 @@ ADMIN PANEL
         <div class="chat-title">Админ-панель</div>
         <button class="close-chat" onclick="closeAdminPanel()">✕</button>
     </header>
+    <div class="admin-actions">
+
+    <button
+        class="main-btn"
+        onclick="openMailAdmin()">
+
+        📬 Почта
+
+    </button>
+
+</div>
 
     <div id="adminUsersList" class="support-list"></div>
 
@@ -533,6 +556,109 @@ CODE PAGE (LOGIN)
             onclick="warnModal.classList.add('hidden')">
 
             Отмена
+
+        </button>
+
+    </div>
+
+</div>
+<!-- ======================
+MAIL
+====================== -->
+
+<div id="mailModal" class="modal hidden">
+
+    <div class="modal-window mail-window">
+
+        <div class="mail-header">
+
+            <h2>Почта</h2>
+
+            <button
+                class="close-chat"
+                onclick="closeMail()">
+                ✕
+            </button>
+
+        </div>
+
+        <div id="mailList" class="mail-list">
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    📭
+                </div>
+
+                <h3>
+                    Пока нет писем
+                </h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="mailAdminModal" class="modal hidden">
+
+    <div class="modal-window mail-admin-window">
+
+        <h2>Отправка письма</h2>
+
+        <input
+            id="mailTitle"
+            placeholder="Название">
+
+        <textarea
+            id="mailMessage"
+            placeholder="Текст письма"></textarea>
+
+        <select id="mailType">
+
+            <option value="all">
+                Всем пользователям
+            </option>
+
+            <option value="user">
+                Конкретному пользователю
+            </option>
+
+            <option value="random">
+                Случайному пользователю
+            </option>
+
+        </select>
+
+        <input
+            id="mailUsername"
+            placeholder="@username">
+
+        <button
+            class="main-btn"
+            onclick="sendMailAdmin()">
+
+            Отправить
+
+        </button>
+
+        <hr>
+
+        <h3>
+            Все письма
+        </h3>
+
+        <div id="adminMailList">
+
+        </div>
+
+        <button
+            class="cancel-btn"
+            onclick="closeMailAdmin()">
+
+            Закрыть
 
         </button>
 
