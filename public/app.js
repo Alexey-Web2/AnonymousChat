@@ -163,6 +163,55 @@ const sendCodeBtn =
         "sendCodeBtn"
     );
 
+// =======================
+// РОЗЫГРЫШ (GIVEAWAY)
+// =======================
+const giveawayModal = document.getElementById('giveawayModal');
+const giveawayCountdown = document.getElementById('giveawayCountdown');
+
+// Открытие окна
+function openGiveaway() {
+    giveawayModal.classList.remove('hidden');
+}
+
+// Закрытие окна
+function closeGiveaway() {
+    giveawayModal.classList.add('hidden');
+}
+
+// Дата розыгрыша: 18 Июля 2026 года, 20:00:00
+const targetDate = new Date("2026-07-18T20:00:00").getTime();
+
+// Функция таймера
+function updateGiveawayTimer() {
+    if (!giveawayCountdown) return; // Защита от ошибок, если элемент не загрузился
+    
+    const now = new Date().getTime();
+    const distance = targetDate - now;
+
+    if (distance < 0) {
+        giveawayCountdown.innerHTML = "РОЗЫГРЫШ ИДЁТ!";
+        return;
+    }
+
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    const format = (num) => (num < 10 ? "0" + num : num);
+    
+    let timeString = "";
+    if (days > 0) timeString += `${days}д `;
+    timeString += `${format(hours)}:${format(minutes)}:${format(seconds)}`;
+
+    giveawayCountdown.innerHTML = timeString;
+}
+
+// Инициализация
+updateGiveawayTimer();
+setInterval(updateGiveawayTimer, 1000);
+
 
 function openPromoAdmin(){
 

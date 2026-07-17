@@ -64,6 +64,11 @@ HOME
             ☰
         </button>
 
+        <button
+            class="giveaway-button"
+            onclick="openGiveaway()">
+            🎁
+        </button>
     </div>
 
 </header>
@@ -774,6 +779,64 @@ onclick="closePromoReward()">
 
 </div>
 
+</div>
+
+<!-- ======================
+GIVEAWAY (РОЗЫГРЫШ)
+====================== -->
+<div id="giveawayModal" class="modal hidden">
+    <div class="modal-window">
+
+        <header class="chat-header" style="border:none; padding: 0; background: transparent; height: auto; margin-bottom: 20px;">
+            <h2>РОЗЫГРЫШ</h2>
+            <button class="close-chat" onclick="closeGiveaway()">✕</button>
+        </header>
+        
+        <div class="giveaway-timer-box">
+            <p>До выдачи приза:</p>
+            <div id="giveawayCountdown">Загрузка...</div>
+        </div>
+        
+        <!-- Описание розыгрыша -->
+        <div class="giveaway-description" style="text-align: left; margin-bottom: 24px;">
+            
+            <!-- Заголовок описания -->
+            <h3 style="margin-bottom: 12px; font-size: 18px; color: var(--primary);">
+                Розыгрыш на 100 звёзд в Telegram!
+            </h3>
+            
+            <!-- Основной текст -->
+            <p style="margin-bottom: 16px; font-size: 15px; line-height: 1.5;">
+                Участвуют все пользователи, которые зарегистрированы!<br>
+                <strong>18 июля</strong> приз будет выдан случайному пользователю!
+            </p>
+
+            <!-- Список действий -->
+            <p style="margin-bottom: 8px; font-weight: 600; font-size: 15px;">Как получить приз:</p>
+            <ul style="list-style: none; padding: 0; margin: 0 0 16px 0; font-size: 14px; color: var(--muted); line-height: 1.6;">
+                <li style="margin-bottom: 4px;">◉ Вам на почту сайта придет сообщение от админа</li>
+                <li style="margin-bottom: 4px;">◉ В нём будет содержаться промокод</li>
+                <li style="margin-bottom: 4px;">◉ Активировав промокод, вы получите ключ пополнения</li>
+                <li>◉ Напишите в поддержку для получения приза</li>
+            </ul>
+
+            <!-- Доп. условие -->
+            <p style="margin-bottom: 12px; font-size: 14px; color: var(--muted); line-height: 1.5;">
+                Вы можете передать промокод другому пользователю, чтобы он получил приз.
+            </p>
+
+            <!-- Предупреждение -->
+            <p style="margin-bottom: 0; font-size: 13px; color: var(--warning); line-height: 1.5; font-weight: 600; background: rgba(245, 158, 11, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                ⚠️ Если в течение 10 минут сообщение в поддержку не поступит, промокод деактивируется и будет выбран другой победитель.
+            </p>
+
+        </div>
+        
+        <button class="main-btn" onclick="closeGiveaway()">
+            Отлично, жду!
+        </button>
+
+    </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
