@@ -8,6 +8,9 @@ const socket = io();
 // ЭЛЕМЕНТЫ
 // ======================
 
+const promoAdminModal=document.getElementById("promoAdminModal");
+const promoList=document.getElementById("promoList");
+
 const mailTitle = document.getElementById("mailTitle");
 const mailMessage = document.getElementById("mailMessage");
 const mailType = document.getElementById("mailType");
@@ -161,6 +164,170 @@ const sendCodeBtn =
     );
 
 
+function openPromoAdmin(){
+
+promoAdminModal.classList.remove("hidden");
+
+socket.emit("getPromos");
+
+}
+
+function closePromoAdmin(){
+
+promoAdminModal.classList.add("hidden");
+
+}
+
+function closePromoReward(){
+
+promoRewardModal.classList.add("hidden");
+
+}
+
+function createPromo(){
+
+socket.emit("createPromo",{
+
+code:promoCode.value,
+
+title:promoRewardTitleInput.value,
+
+text:promoRewardTextInput.value,
+
+type:promoType.value,
+
+uses:Number(promoUses.value)
+
+});
+
+}
+
+socket.on("promoCreated",()=>{
+
+showToast("Промокод создан");
+
+socket.emit("getPromos");
+
+});
+
+socket.on("promoList",(list)=>{
+
+promoList.innerHTML="";
+
+list.forEach(promo=>{
+
+let status="";
+
+if(promo.type==="eternal"){
+
+status="♾ Вечный";
+
+}else{
+
+if(promo.uses_left>0){
+
+status="Осталось: "+promo.uses_left;
+
+}else{
+
+status="❌ Активации закончились";
+
+}
+
+}
+
+promoList.innerHTML+=`
+
+<div class="admin-mail">
+
+<div class="admin-mail-title">
+
+${promo.code}
+
+</div>
+
+<div>
+
+${promo.reward_title}
+
+</div>
+
+<div>
+
+${status}
+
+</div>
+
+<button
+class="danger-btn"
+onclick="deletePromo(${promo.id})">
+
+Удалить
+
+</button>
+
+</div>
+
+`;
+
+});
+
+});
+
+function deletePromo(id){
+
+socket.emit("deletePromo",id);
+
+}
+
+socket.on("promoSuccess",(promo)=>{
+
+    document.getElementById(
+        "promoRewardTitle"
+    ).innerText=
+    promo.title;
+
+    document.getElementById(
+        "promoRewardText"
+    ).innerText=
+    promo.text;
+
+    promoRewardModal.classList.remove(
+        "hidden"
+    );
+
+});
+
+socket.on("promoError",(text)=>{
+
+    showToast(text);
+
+});
+
+function activatePromo(){
+
+    const code =
+    document
+    .getElementById("promoInput")
+    .value
+    .trim();
+
+    if(code===""){
+
+        showToast("Введите промокод");
+
+        return;
+
+    }
+
+    socket.emit(
+        "activatePromo",
+        code
+    );
+
+}
+
+
 function openMail(){
 
 mailModal.classList.remove(
@@ -180,6 +347,14 @@ mailModal.classList.add(
 );
 
 }
+
+function getAdminMail() {
+
+    socket.emit("getAdminMail");
+
+}
+
+
 
 socket.on(
     "mailList",
@@ -227,7 +402,7 @@ socket.on(
 
                 <div class="mail-text">
 
-                    ${mail.message}
+                    ${mail.text}
 
                 </div>
 
@@ -266,29 +441,22 @@ mailAdminModal.classList.add(
 "hidden"
 );
 }
-function sendMailAdmin(){
+function sendMailAdmin() {
 
-socket.emit(
-"sendMail",
-{
+    socket.emit("sendMail", {
 
-title:
-mailTitle.value,
+        title: document.getElementById("mailTitle").value,
 
-message:
-mailMessage.value,
+        text: document.getElementById("mailMessage").value,
 
-type:
-mailType.value,
+        type: document.getElementById("mailType").value,
 
-username:
-mailUsername.value
+        username: document.getElementById("mailUsername").value
+
+    });
 
 }
 
-);
-
-}
 socket.on(
     "adminMailList",
     (mails) => {
@@ -306,7 +474,7 @@ socket.on(
                     ${mail.title}
                 </div>
                 <div>
-                    ${mail.message}
+                    ${mail.text}
                 </div>
                 <div class="admin-mail-type">
                     ${
@@ -334,6 +502,55 @@ id
 );
 
 }
+
+function sendMail() {
+
+    const title = document.getElementById("mailTitle").value.trim();
+    const text = document.getElementById("mailText").value.trim();
+    const type = document.getElementById("mailType").value;
+    const username = document.getElementById("mailUsername").value.trim();
+
+    if (title === "") {
+        showToast("Введите название");
+        return;
+    }
+
+    if (text === "") {
+        showToast("Введите сообщение");
+        return;
+    }
+
+    if (type === "user" && username === "") {
+        showToast("Введите username");
+        return;
+    }
+
+    socket.emit("sendMail", {
+        title,
+        text,
+        type,
+        username
+    });
+
+}
+
+function deleteMail(id){
+
+    socket.emit("deleteMail", id);
+
+}
+socket.on("mailSent", () => {
+
+    showToast("Письмо отправлено");
+
+    getAdminMail();
+
+});
+socket.on("mailError", (text) => {
+
+    showToast(text);
+
+});
 
 // ======================
 // ДАННЫЕ
@@ -521,15 +738,22 @@ function openChat() {
 // ======================
 // СООБЩЕНИЯ В ЧАТЕ
 // ======================
-
 function sendMessage() {
+
+    const messageInput = document.getElementById("chatInput");
+
+    if (!messageInput) return;
+
     const text = messageInput.value.trim();
-    console.log("1. Попытка отправки. Текст из поля:", text); // Видно ли это в консоли?
-    
-    if (!text) return; // Если text пустой, код остановится здесь
-    
-    socket.emit("send_message", { message: text });
-    console.log("2. Событие отправлено в сокет");
+
+    if (text === "") return;
+
+    socket.emit("chatMessage", text);
+
+    addMyMessage(text);
+
+    messageInput.value = "";
+
 }
 
 // пришло сообщение
@@ -1450,32 +1674,19 @@ socket.on(
 // ======================
 // АДМИН ПАНЕЛЬ
 // ======================
-
 function openAdminPanel() {
 
-    socket.emit(
-        "getAllUsers"
-    );
+    accessPanel.classList.add("hidden");
+    supportListPage.classList.add("hidden");
+    adminPanel.classList.remove("hidden");
 
-    homePage.classList.add(
-        "hidden"
-    );
-
-    adminPanel.classList.remove(
-        "hidden"
-    );
+    socket.emit("getAllUsers");
 
 }
 
 function closeAdminPanel() {
 
-    adminPanel.classList.add(
-        "hidden"
-    );
-
-    homePage.classList.remove(
-        "hidden"
-    );
+    adminPanel.classList.add("hidden");
 
 }
 
@@ -1779,29 +1990,17 @@ const accessPanel =
 
 function openAccessPanel() {
 
-    socket.emit(
-        "getAccessSettings"
-    );
+    adminPanel.classList.add("hidden");
+    supportListPage.classList.add("hidden");
+    accessPanel.classList.remove("hidden");
 
-    homePage.classList.add(
-        "hidden"
-    );
-
-    accessPanel.classList.remove(
-        "hidden"
-    );
+    socket.emit("getAccessSettings");
 
 }
 
 function closeAccessPanel() {
 
-    accessPanel.classList.add(
-        "hidden"
-    );
-
-    homePage.classList.remove(
-        "hidden"
-    );
+    accessPanel.classList.add("hidden");
 
 }
 

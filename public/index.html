@@ -195,6 +195,18 @@ PROFILE
 
         <h2 id="profileUsername">@username</h2>
 
+        <input
+id="promoInput"
+placeholder="Введите промокод">
+
+<button
+class="main-btn"
+onclick="activatePromo()">
+
+Активировать
+
+</button>
+
         <button class="logout-btn" onclick="logout()">
             Выйти
         </button>
@@ -346,6 +358,14 @@ ADMIN PANEL
         📬 Почта
 
     </button>
+
+    <button
+class="main-btn"
+onclick="openPromoAdmin()">
+
+🎁 Промокоды
+
+</button>
 
 </div>
 
@@ -604,6 +624,7 @@ MAIL
 
 <div id="mailAdminModal" class="modal hidden">
 
+
     <div class="modal-window mail-admin-window">
 
         <h2>Отправка письма</h2>
@@ -663,6 +684,95 @@ MAIL
         </button>
 
     </div>
+
+</div>
+
+<div id="promoAdminModal" class="modal hidden">
+
+    <div class="modal-window mail-admin-window">
+
+        <h2>Промокоды</h2>
+
+        <input
+            id="promoCode"
+            placeholder="Код">
+
+        <input
+            id="promoRewardTitleInput"
+            placeholder="Название выигрыша">
+
+        <textarea
+            id="promoRewardTextInput"
+            placeholder="Описание выигрыша"></textarea>
+
+        <select id="promoType">
+
+            <option value="eternal">
+                Вечный
+            </option>
+
+            <option value="limited">
+                Лимитный
+            </option>
+
+        </select>
+
+        <input
+            id="promoUses"
+            type="number"
+            placeholder="Количество использований">
+
+        <button
+            class="main-btn"
+            onclick="createPromo()">
+
+            Создать
+
+        </button>
+
+        <hr>
+
+        <h3>Все промокоды</h3>
+
+        <div id="promoList"></div>
+
+        <button
+            class="cancel-btn"
+            onclick="closePromoAdmin()">
+
+            Закрыть
+
+        </button>
+
+    </div>
+
+</div>
+
+<div
+id="promoRewardModal"
+class="modal hidden">
+
+<div class="modal-window">
+
+<h2
+id="promoRewardTitle">
+Название
+</h2>
+
+<p
+id="promoRewardText">
+Описание
+</p>
+
+<button
+class="main-btn"
+onclick="closePromoReward()">
+
+Закрыть
+
+</button>
+
+</div>
 
 </div>
 

@@ -69,106 +69,278 @@ io.on("connection", (socket) => {
     console.log("Connected:", socket.id);
     socket.isAdmin = false;
 
+    socket.on("activatePromo", async (code) => {
+
+    if (!socket.username) return;
+
+    // Ищем промокод
+    const { data: promo } = await supabase
+        .from("promo_codes")
+        .select("*")
+        .eq("code", code)
+        .eq("deleted", false)
+        .maybeSingle();
+
+    if (!promo) {
+        socket.emit("promoError", "Промокод не существует");
+        return;
+    }
+
+    // Проверяем, использовал ли пользователь
+    const { data: activated } = await supabase
+        .from("promo_activations")
+        .select("*")
+        .eq("username", socket.username)
+        .eq("promo_code", code)
+        .maybeSingle();
+
+    if (activated) {
+        socket.emit("promoError", "Вы уже использовали этот промокод");
+        return;
+    }
+
+    // Проверяем лимит
+    if (promo.type === "limited") {
+
+        if (promo.uses_left <= 0) {
+
+            socket.emit(
+                "promoError",
+                "Активации закончились"
+            );
+
+            return;
+
+        }
+
+        await supabase
+            .from("promo_codes")
+            .update({
+                uses_left: promo.uses_left - 1
+            })
+            .eq("id", promo.id);
+
+    }
+
+    // Записываем использование
+    await supabase
+        .from("promo_activations")
+        .insert({
+
+            username: socket.username,
+
+            promo_code: code
+
+        });
+
+    socket.emit("promoSuccess", {
+
+        title: promo.reward_title,
+
+        text: promo.reward_text
+
+    });
+
+});
+
+    socket.on("deletePromo",async(id)=>{
+
+if(!socket.isAdmin) return;
+
+await supabase
+.from("promo_codes")
+.update({
+deleted:true
+})
+.eq("id",id);
+
+const {data}=await supabase
+.from("promo_codes")
+.select("*")
+.eq("deleted",false);
+
+socket.emit("promoList",data);
+
+});
+
+    socket.on("getPromos",async()=>{
+
+if(!socket.isAdmin) return;
+
+const {data}=await supabase
+.from("promo_codes")
+.select("*")
+.eq("deleted",false)
+.order("created_at",{ascending:false});
+
+socket.emit("promoList",data);
+
+});
+
+    socket.on("createPromo",async(data)=>{
+
+if(!socket.isAdmin) return;
+
+await supabase
+.from("promo_codes")
+.insert({
+
+code:data.code,
+
+reward_title:data.title,
+
+reward_text:data.text,
+
+type:data.type,
+
+uses_left:data.uses,
+
+deleted:false
+
+});
+
+socket.emit("promoCreated");
+
+});
+
     // ======================
     // ПОЛУЧЕНИЕ ПОЧТЫ
     // ======================
     socket.on("getMail", async () => {
-        if (!socket.username) return;
 
-        try {
-            // письма всем
-            const { data: globalMail } = await supabase
-                .from("mail_messages")
-                .select("*")
-                .eq("deleted", false)
-                .eq("send_type", "all");
+    if (!socket.username) return;
 
-            // личные письма
-            const { data: personalMail } = await supabase
-                .from("mail_messages")
-                .select("*")
-                .eq("deleted", false)
-                .eq("send_type", "user")
-                .eq("target_username", socket.username);
+    const { data } = await supabase
+        .from("mail_messages")
+        .select("*")
+        .eq("deleted", false)
+        .order("created_at", { ascending: false });
 
-            const mails = [
-                ...(globalMail || []),
-                ...(personalMail || [])
-            ];
+    const result = [];
 
-            mails.sort(
-                (a, b) => new Date(b.created_at) - new Date(a.created_at)
-            );
+    for (const mail of data || []) {
 
-            socket.emit("mailList", mails);
-        } catch (err) {
-            console.error("Get Mail Error:", err);
+        if (mail.send_type === "all") {
+
+            result.push(mail);
+
         }
-    });
+
+        else if (
+            mail.target_username === socket.username
+        ) {
+
+            result.push(mail);
+
+        }
+
+    }
+
+    socket.emit("mailList", result);
+
+});
 
     // ======================
     // ОТПРАВКА И УПРАВЛЕНИЕ ПОЧТОЙ
     // ======================
     socket.on("sendMail", async (data) => {
-        if (!socket.isAdmin) return;
-        
-        try {
-            let username = null;
 
-            if (data.type === "all") {
-                await supabase
-                    .from("mail_messages")
-                    .insert({
-                        title: data.title,
-                        text: data.text,
-                        send_type: "all",
-                        deleted: false
-                    });
-            } else if (data.type === "user") {
-                username = data.username;
-                await supabase
-                    .from("mail_messages")
-                    .insert({
-                        title: data.title,
-                        text: data.text,
-                        send_type: "user",
-                        target_username: username,
-                        deleted: false
-                    });
-            } else if (data.type === "random") {
-                const { data: users, error } = await supabase
-                    .from("users")
-                    .select("username")
-                    .neq("username", ADMIN_USERNAME);
+    if (!socket.isAdmin) return;
 
-                if (error) {
-                    console.log(error);
-                    return;
-                }
+    try {
 
-                if (!users || users.length === 0) {
-                    socket.emit("mailError", "Нет пользователей");
-                    return;
-                }
+        let sendType = data.type;
+        let targetUsername = null;
 
-                const randomIndex = Math.floor(Math.random() * users.length);
-                username = users[randomIndex].username;
+        // Всем
+        if (sendType === "all") {
 
-                await supabase
-                    .from("mail_messages")
-                    .insert({
-                        title: data.title,
-                        text: data.text,
-                        send_type: "user",
-                        target_username: username,
-                        deleted: false
-                    });
-            }
-            socket.emit("mailSent");
-        } catch (err) {
-            console.error("Send Mail Error:", err);
+            await supabase
+                .from("mail_messages")
+                .insert({
+                    title: data.title,
+                    text: data.text,
+                    send_type: "all",
+                    target_username: null,
+                    deleted: false
+                });
+
         }
-    });
+
+        // Конкретному пользователю
+        else if (sendType === "user") {
+
+            const { data: user } = await supabase
+                .from("users")
+                .select("username")
+                .eq("username", data.username)
+                .maybeSingle();
+
+            if (!user) {
+
+                socket.emit("mailError", "Пользователь не найден");
+                return;
+
+            }
+
+            targetUsername = user.username;
+
+            await supabase
+                .from("mail_messages")
+                .insert({
+                    title: data.title,
+                    text: data.text,
+                    send_type: "user",
+                    target_username: targetUsername,
+                    deleted: false
+                });
+
+        }
+
+        // Случайному пользователю
+        else if (sendType === "random") {
+
+            const { data: users } = await supabase
+                .from("users")
+                .select("username")
+                .neq("username", ADMIN_USERNAME);
+
+            if (!users || users.length === 0) {
+
+                socket.emit("mailError", "Нет пользователей");
+                return;
+
+            }
+
+            const randomUser =
+                users[Math.floor(Math.random() * users.length)];
+
+            targetUsername = randomUser.username;
+
+            await supabase
+                .from("mail_messages")
+                .insert({
+                    title: data.title,
+                    text: data.text,
+                    send_type: "random",
+                    target_username: targetUsername,
+                    deleted: false
+                });
+
+        }
+
+        socket.emit("mailSent");
+
+        io.emit("mailUpdated");
+
+    } catch (err) {
+
+        console.log(err);
+        socket.emit("mailError", "Ошибка отправки");
+
+    }
+
+});
 
     socket.on("getAdminMail", async () => {
         if (!socket.isAdmin) return;
