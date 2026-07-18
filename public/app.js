@@ -180,7 +180,7 @@ function closeGiveaway() {
 }
 
 // Дата розыгрыша: 18 Июля 2026 года, 20:00:00
-const targetDate = new Date("2026-07-18T20:00:00").getTime();
+const targetDate = new Date("2026-07-18T12:30:00").getTime();
 
 // Функция таймера
 function updateGiveawayTimer() {
